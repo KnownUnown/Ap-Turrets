@@ -41,7 +41,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     private Boolean Debug = false;
     private FileConfiguration config = getConfig();
     private boolean takeFromInventory,takeFromChest,requireAmmo;
-    private double costToPlace,damage,incindiaryChance;
+    private double costToPlace,damage,incindiaryChance,arrowVelocity;
     private int knockbackStrength;
     private static Economy economy;
     @Override
@@ -55,6 +55,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         config.addDefault("Damage per arrow", 2.5);
         config.addDefault("Incindiary chance", 0.10);
         config.addDefault("Knockback strength", 2);
+        config.addDefault("Arrow velocity",4.0);
         config.options().copyDefaults(true);
         this.saveConfig();
         /////load configs
@@ -63,8 +64,9 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         costToPlace = getConfig().getDouble("Cost to Place");
         requireAmmo = getConfig().getBoolean("Require Ammo");
         damage =  getConfig().getInt("Knockback strength");
-        incindiaryChance =  getConfig().getInt("Incindiary chance");
+        incindiaryChance =  getConfig().getDouble("Incindiary chance");
         knockbackStrength = getConfig().getInt("Damage per arrow");
+        arrowVelocity = getConfig().getDouble("Arrow velocity");
         getServer().getPluginManager().registerEvents(this, this);
         //vault
         if (getServer().getPluginManager().getPlugin("Vault") != null) {
@@ -206,7 +208,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     {
         Arrow arrow = player.launchProjectile(Arrow.class);
         arrow.setShooter(player);
-        arrow.setVelocity(player.getLocation().getDirection().multiply(5));
+        arrow.setVelocity(player.getLocation().getDirection().multiply(arrowVelocity));
         arrow.setBounce(false);
         double rand = Math.random();
         if (rand <= incindiaryChance){
