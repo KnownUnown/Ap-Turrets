@@ -208,7 +208,10 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         arrow.setShooter(player);
         arrow.setVelocity(player.getLocation().getDirection().multiply(5));
         arrow.setBounce(false);
-        arrow.setFireTicks(500);
+        double rand = Math.random();
+        if (rand <= incindiaryChance){
+            arrow.setFireTicks(500);
+        }
         arrow.setCritical(true);
         arrow.setCustomName("Bullet");
         arrow.setCustomNameVisible(false);
@@ -260,14 +263,14 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                 Location l = arrowLoc.getBlock().getLocation();
                 arrow.getWorld().playEffect(l, Effect.STEP_SOUND, world.getBlockTypeIdAt(l));
                 arrow.getWorld().playSound(l, Sound.ENTITY_ITEM_BREAK, 1, 2);
-                Block block = l.getBlock();
-                double rand = Math.random();
-                if (rand <= incindiaryChance){
-                    if (Debug = true){
-                        logger.info("Block was set on fire");
-                    }
-                    block.setType(Material.FIRE);	
-                }
+                //Block block = l.getBlock();
+                //double rand = Math.random();
+                //                     if (rand <= incindiaryChance){
+                //                         if (Debug = true){
+                //                             logger.info("Block was set on fire");
+                //                         }
+                //                         block.setType(Material.FIRE);	
+                //                     }
                 // Vector vec = arrow.getVelocity().clone().normalize();
                 // vec.setX(vec.getX() * 0.1);
                 // vec.setY(vec.getY() * 0.1);
