@@ -204,7 +204,6 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         }
     }
 
-    @SuppressWarnings("deprecation")
     public void fireTurret(Player player) 
     {
         Arrow arrow = player.launchProjectile(Arrow.class);
@@ -232,13 +231,6 @@ public final class TurretsMain extends JavaPlugin implements Listener {
             player.getInventory().removeItem(new ItemStack[] {new ItemStack(Material.ARROW, 1) });
             player.updateInventory();
         }
-
-        //send the player the total ammo they have
-        int i=0;
-        for(ItemStack is : player.getInventory().getContents())
-            if(is.getType()==Material.ARROW)
-                i+=is.getAmount();
-        player.sendTitle("","Ammo: " + i);
 
         if (Debug == true) {
             logger.info("BAM");
@@ -336,7 +328,6 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         }
     }
 
-    @SuppressWarnings("deprecation")
     public void setOnTurret(Player player, Location signPos) {
         if (signPos.getBlock().getType() == Material.SIGN || signPos.getBlock().getType() == Material.SIGN_POST
         || signPos.getBlock().getType() == Material.WALL_SIGN) {
@@ -360,19 +351,12 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                 player.teleport(signPos);
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 1000000, 6));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 1000000, 200));
-
-                int i=0;
-                for(ItemStack is : player.getInventory().getContents())
-                    if(is.getType()==Material.ARROW)
-                        i+=is.getAmount();
-                player.sendTitle("","Ammo: " + i);
             }
         } else {
             logger.warning("Sign not found!");
         }
     }
 
-    @SuppressWarnings("deprecation")
     public void setOffTurret(Player player, Location signPos) {
         if (Debug == true) {
             logger.info(player.getName() + " is being taken off a turret");
@@ -392,7 +376,6 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         signPos.subtract(-0.5, 0, -0.5);
         player.removePotionEffect(PotionEffectType.SLOW);
         player.removePotionEffect(PotionEffectType.JUMP);
-        player.resetTitle();
     }
 
 }
