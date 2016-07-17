@@ -316,6 +316,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         }
     }
 
+    @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event){
         if(event.getDamager() instanceof Arrow){
             Arrow a = (Arrow) event.getEntity();
