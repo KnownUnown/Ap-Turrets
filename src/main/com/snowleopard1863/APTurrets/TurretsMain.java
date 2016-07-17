@@ -296,24 +296,12 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onDamage(EntityDamageByEntityEvent e) {
-        if (e.getDamager() instanceof Arrow) {
-            Arrow a = (Arrow) e.getDamager();
-            if (a.getCustomName() == "Bullet") {
-                Player shooter = (Player) a.getShooter();
-                e.setDamage(damage);
-                if (Debug == true) {
-                    logger.info(e.getEntity() + " was shot by " + shooter.getName());
-                }
-            }
-        }
-    }
-
-    @EventHandler
     public void onEntityDamageEvent(EntityDamageEvent event) {
         if (Debug == true) {
             logger.info("An entity was damaged");
         }
+
+        
         if (event.getEntity() instanceof Player) {
             if (Debug == true) {
                 logger.info("It was a player");
@@ -324,6 +312,18 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                     logger.info("on a turret");
                 }
                 setOffTurret(player, player.getLocation());
+            }
+        }
+    }
+
+    public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event){
+        if(event.getDamager() instanceof Arrow){
+            Arrow a = (Arrow) event.getEntity();
+            if (a.getCustomName() == "Bullet") {
+                Player shooter = (Player) a.getShooter();
+                event.setDamage(damage);
+                if (Debug == true) 
+                    logger.info(event.getEntity() + " was shot by " + shooter.getName());
             }
         }
     }
