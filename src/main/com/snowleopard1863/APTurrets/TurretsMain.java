@@ -65,9 +65,9 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         takeFromInventory = getConfig().getBoolean("Take arrows from inventory");
         costToPlace = getConfig().getDouble("Cost to Place");
         requireAmmo = getConfig().getBoolean("Require Ammo");
-        damage =  getConfig().getInt("Knockback strength");
+        knockbackStrength =  getConfig().getInt("Knockback strength");
         incindiaryChance =  getConfig().getDouble("Incindiary chance");
-        knockbackStrength = getConfig().getInt("Damage per arrow");
+        damage = getConfig().getInt("Damage per arrow");
         arrowVelocity = getConfig().getDouble("Arrow velocity");
         getServer().getPluginManager().registerEvents(this, this);
         //vault
