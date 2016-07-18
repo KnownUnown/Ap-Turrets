@@ -325,7 +325,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                 if (Debug == true){
                     Arrow a = (Arrow) event.getDamager();
                     Player shooter = (Player) a.getShooter();
-                    logger.info(event.getEntity() + " was shot by " + shooter.getName() + " for " +event.getDamage());
+                    logger.info(event.getEntity() + " was shot by " + shooter.getName() + " for " +event.getDamage() + " It should be doing " + damage);
                 }
             }
         }
