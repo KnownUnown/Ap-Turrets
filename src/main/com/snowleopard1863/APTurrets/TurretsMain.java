@@ -60,7 +60,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         config.options().copyDefaults(true);
         this.saveConfig();
         /////load configs
-        debug = getConfig().getBoolean("Debug mode");
+        Debug = getConfig().getBoolean("Debug mode");
         takeFromChest = getConfig().getBoolean("Take arrows from chest");
         takeFromInventory = getConfig().getBoolean("Take arrows from inventory");
         costToPlace = getConfig().getDouble("Cost to Place");
