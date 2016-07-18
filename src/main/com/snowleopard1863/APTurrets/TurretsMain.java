@@ -67,7 +67,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         requireAmmo = getConfig().getBoolean("Require Ammo");
         knockbackStrength =  getConfig().getInt("Knockback strength");
         incindiaryChance =  getConfig().getDouble("Incindiary chance");
-        damage = getConfig().getInt("Damage per arrow");
+        damage = getConfig().getDouble("Damage per arrow");
         arrowVelocity = getConfig().getDouble("Arrow velocity");
         getServer().getPluginManager().registerEvents(this, this);
         //vault
