@@ -48,6 +48,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     public void onEnable() {
         logger.info(pdfile.getName() + " v" + pdfile.getVersion() + " has been enbaled.");
         /////default configs
+        config.addDefault("Debug mode", false);
         config.addDefault("Cost to Place", 15000.00);
         config.addDefault("Take arrows from inventory", true);
         config.addDefault("Take arrows from chest", true);
@@ -59,6 +60,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         config.options().copyDefaults(true);
         this.saveConfig();
         /////load configs
+        debug = getConfig().getBoolean("Debug mode");
         takeFromChest = getConfig().getBoolean("Take arrows from chest");
         takeFromInventory = getConfig().getBoolean("Take arrows from inventory");
         costToPlace = getConfig().getDouble("Cost to Place");
@@ -324,7 +326,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                 Player shooter = (Player) a.getShooter();
                 event.setDamage(damage);
                 if (Debug == true) 
-                    logger.info(event.getEntity() + " was shot by " + shooter.getName());
+                    logger.info(event.getEntity() + " was shot by " + shooter.getName() + " for " +event.getDamage());
             }
         }
     }
