@@ -351,6 +351,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                 sign.update();
                 onTurrets.add(player);
                 signPos.add(0.5, 0, 0.5);
+                signPos.setDirection(player.getEyeLocation().getDirection());
                 player.teleport(signPos);
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 1000000, 6));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 1000000, 200));
