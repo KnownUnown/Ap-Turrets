@@ -239,12 +239,6 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         // player.teleport(loc);
         if(requireAmmo && takeFromInventory){
             player.getInventory().removeItem(new ItemStack[] {new ItemStack(Material.ARROW, 1) });
-            int count = 0;
-            for(ItemStack stack : player.getInventory()){
-                if(stack.getType() == Material.ARROW)
-                    count+=stack.getAmount();
-            }
-            player.sendTitle("","Ammo: " + count);
             player.updateInventory();
         }
 
@@ -395,8 +389,6 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         }
         signPos.subtract(-0.5, 0, -0.5);
         player.removePotionEffect(PotionEffectType.SLOW);
-        player.removePotionEffect(PotionEffectType.JUMP);
-        player.resetTitle();
     }
 
     @EventHandler
