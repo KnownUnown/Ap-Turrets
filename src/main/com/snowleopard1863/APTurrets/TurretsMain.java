@@ -18,6 +18,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -32,6 +33,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.metadata.FixedMetadataValue;
 
 import net.milkbowl.vault.economy.Economy;
 public final class TurretsMain extends JavaPlugin implements Listener {
@@ -75,16 +77,13 @@ public final class TurretsMain extends JavaPlugin implements Listener {
             RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
             if (rsp != null) {
                 economy = rsp.getProvider();
-                if (Debug == true)
-                    logger.info("Found a compatible Vault plugin.");			
+                logger.info("Found a compatible Vault plugin.");			
             } else {
-                if (Debug == true)
-                    logger.info("Could not find compatible Vault plugin. Disabling Vault integration.");			
+                logger.info("Could not find compatible Vault plugin. Disabling Vault integration.");			
                 economy = null;
             }
         } else {
-            if (Debug == true)
-                logger.info("Could not find compatible Vault plugin. Disabling Vault integration.");			
+            logger.info("Could not find compatible Vault plugin. Disabling Vault integration.");			
             economy = null;
         }
     }
@@ -175,23 +174,31 @@ public final class TurretsMain extends JavaPlugin implements Listener {
             //check if player has permission to place a turret, than check if they have enough money to place the sign
             if(player.hasPermission("ap-turrets.place"))
             {
-                if(economy.has(player,costToPlace))
+                if(economy!=null)
                 {
-                    //if true charge player a configurable amount and send a message
-                    economy.withdrawPlayer(player,15000);
+                    if(economy.has(player,costToPlace))
+                    {
+                        //if true charge player a configurable amount and send a message
+                        economy.withdrawPlayer(player,15000);
+                        player.sendMessage("Turret created");
+                        if (Debug == true) {
+                            logger.info("A Mounted Gun sign has been place");
+                        }
+                    }
+                    else
+                    {
+                        if (Debug == true) {
+                            logger.info("A Mounted Gun sign failed to place");
+                        }
+                        //if false, clear the sign and return a permision error
+                        event.setCancelled(true);
+                        player.sendMessage("Sorry, you don't have enough money to place a turret");             
+                    }
+                }else{
                     player.sendMessage("Turret created");
                     if (Debug == true) {
-                        logger.info("A Mounted Gun sign has been place");
+                        logger.info("A Mounted Gun sign has been placed for free due to no vault instalation");
                     }
-                }
-                else
-                {
-                    if (Debug == true) {
-                        logger.info("A Mounted Gun sign failed to place");
-                    }
-                    //if false, clear the sign and return a permision error
-                    event.setCancelled(true);
-                    player.sendMessage("Sorry, you don't have enough money to place a turret");             
                 }
             }
             else
@@ -217,8 +224,9 @@ public final class TurretsMain extends JavaPlugin implements Listener {
             arrow.setFireTicks(500);
         }
         arrow.setCritical(true);
-        arrow.setCustomName("Bullet");
-        arrow.setCustomNameVisible(false);
+        arrow.setMetadata("isTurretBullet", new FixedMetadataValue(this,true));
+        //arrow.setCustomName("Bullet");
+        //arrow.setCustomNameVisible(false);
         arrow.setKnockbackStrength(knockbackStrength);
         World world = player.getWorld();
         world.playSound(player.getLocation(), Sound.ENTITY_FIREWORK_BLAST, 1, 2);
@@ -258,7 +266,8 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     public void onHit(ProjectileHitEvent event) {
         if (event.getEntity() instanceof Arrow) {
             Arrow arrow = (Arrow) event.getEntity();
-            if (arrow.getCustomName() == "Bullet") {
+            //if (arrow.getCustomName() == "Bullet") {
+            if(arrow.hasMetadata("isTurretBullet")){
                 if (Debug == true) {
                     logger.info("A bullet has landed");
                 }
@@ -320,7 +329,8 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event){
         if(event.getDamager() instanceof Arrow){
-            if (event.getDamager().getCustomName() == "Bullet") {
+            //if (event.getDamager().getCustomName() == "Bullet") {
+                if(event.getDamager().hasMetadata("isTurretBullet")){
                 event.setDamage(damage);
                 if (Debug == true){
                     Arrow a = (Arrow) event.getDamager();
@@ -380,6 +390,11 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         signPos.subtract(-0.5, 0, -0.5);
         player.removePotionEffect(PotionEffectType.SLOW);
         player.removePotionEffect(PotionEffectType.JUMP);
+    }
+    
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent e){
+        setOffTurret(e.getPlayer(),e.getPlayer().getLocation());
     }
 
 }
