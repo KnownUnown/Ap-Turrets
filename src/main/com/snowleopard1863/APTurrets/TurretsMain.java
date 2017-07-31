@@ -32,12 +32,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public final class Main extends JavaPlugin implements Listener {
+public final class TurretsMain extends JavaPlugin implements Listener {
     private PluginDescriptionFile pdfile = getDescription();
     private Logger logger = Logger.getLogger("Minecraft");
     private List<Player> onTurrets = new ArrayList<Player>();
     private List<Player> reloading = new ArrayList<Player>();
-    private static List<Arrow> tracedArrows = new ArrayList<Arrow>();
+    private List<Arrow> tracedArrows = new ArrayList<Arrow>();
     private Boolean Debug = false;
     private FileConfiguration config = getConfig();
     private boolean takeFromInventory, takeFromChest, requireAmmo;
@@ -103,10 +103,10 @@ public final class Main extends JavaPlugin implements Listener {
         if (useParticleTracers) {
             getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                 public void run() {
-                    for (Arrow a : Main.tracedArrows) {
+                    for (Arrow a : tracedArrows) {
                         if (a.isOnGround() || a.isDead() || a.getTicksLived() > 100) {
                             a.removeMetadata("tracer", p);
-                            Main.tracedArrows.remove(a);
+                            tracedArrows.remove(a);
                             a.remove();
                         }
                         World world = a.getWorld();
@@ -161,33 +161,31 @@ public final class Main extends JavaPlugin implements Listener {
                 //
                 // Fires Turret If Player Is Holding Button and Has Ammo and Is Not Reloading
                 //
-                if (reloading.contains(player) &&
-                        (player.getInventory().getItemInMainHand().getType() == Material.STONE_BUTTON
-                                || player.getInventory().getItemInOffHand().getType() == Material.STONE_BUTTON)) {
-                    return;
-                } else if ((player.getInventory().getItemInMainHand().getType() == Material.STONE_BUTTON
-                        || player.getInventory().getItemInOffHand().getType() == Material.STONE_BUTTON)
-                        && player.getInventory().contains(Material.ARROW)
-                        && requireAmmo) {
-                    fireTurret(player);
-                    event.setCancelled(true);
-                    if (Debug == true) {
-                        logger.info(event.getPlayer() + " has shot");
-                    }
-                } else if ((player.getInventory().getItemInMainHand().getType() == Material.STONE_BUTTON
-                        || player.getInventory().getItemInOffHand().getType() == Material.STONE_BUTTON)
-                        && player.getInventory().contains(Material.ARROW) != true) {
-                    reloading.add(player);
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-                        public void run() {
-                            reloading.remove(player);
+
+                if ((player.getInventory().getItemInMainHand().getType() == Material.STONE_BUTTON
+                        || player.getInventory().getItemInOffHand().getType() == Material.STONE_BUTTON)) {
+
+                    if (reloading.contains(player)) {
+                        return;
+                    } else if (player.getInventory().contains(Material.ARROW) && requireAmmo) {
+                        fireTurret(player);
+                        event.setCancelled(true);
+                        if (Debug == true) {
+                            logger.info(event.getPlayer() + " has shot");
                         }
-                    }, (int) (delayBetweenShots * 10));
-                    World world = player.getWorld();
-                    world.playSound(player.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 1, 2);
-                    event.setCancelled(true);
-                    if (Debug == true) {
-                        logger.info(event.getPlayer() + " is out of ammo");
+                    } else if (player.getInventory().contains(Material.ARROW) != true) {
+                        reloading.add(player);
+                        Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                            public void run() {
+                                reloading.remove(player);
+                            }
+                        }, (int) (delayBetweenShots * 10));
+                        World world = player.getWorld();
+                        world.playSound(player.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 1, 2);
+                        event.setCancelled(true);
+                        if (Debug == true) {
+                            logger.info(event.getPlayer() + " is out of ammo");
+                        }
                     }
                 }
             }
@@ -314,8 +312,7 @@ public final class Main extends JavaPlugin implements Listener {
 
 
     public void fireTurret(Player player) {
-        if (player.isGliding())
-        {
+        if (player.isGliding()) {
             demount(player, player.getLocation());
             return;
         }
@@ -339,6 +336,7 @@ public final class Main extends JavaPlugin implements Listener {
             arrow.setMetadata("tracer", new FixedMetadataValue(this, true));
             tracedArrows.add(arrow);
             arrow.setCritical(false);
+
             PacketPlayOutEntityDestroy packet = new PacketPlayOutEntityDestroy(arrow.getEntityId());
             for (Player p : getServer().getOnlinePlayers())
                 ((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
@@ -355,7 +353,9 @@ public final class Main extends JavaPlugin implements Listener {
             player.updateInventory();
         }
 
-        if (Debug) {logger.info("Mounted Gun Fired.");}
+        if (Debug) {
+            logger.info("Mounted Gun Fired.");
+        }
     }
 
     @EventHandler
@@ -378,12 +378,14 @@ public final class Main extends JavaPlugin implements Listener {
         if (event.getEntity() instanceof Arrow) {
             Arrow arrow = (Arrow) event.getEntity();
             if (arrow.hasMetadata("isTurretBullet")) {
-                if (Debug) {logger.info("A bullet has landed");}
+                if (Debug) {
+                    logger.info("A bullet has landed");
+                }
                 Location arrowLoc = arrow.getLocation();
                 World world = event.getEntity().getWorld();
                 Location l = arrowLoc.getBlock().getLocation();
                 arrow.getWorld().playEffect(l, Effect.STEP_SOUND, world.getBlockTypeIdAt(l));
-                world.playEffect(l, Effect.TILE_BREAK, l.subtract(0,1,0).getBlock().getTypeId(), 0);
+                world.playEffect(l, Effect.TILE_BREAK, l.subtract(0, 1, 0).getBlock().getTypeId(), 0);
             }
         }
     }
@@ -399,15 +401,13 @@ public final class Main extends JavaPlugin implements Listener {
                 logger.info("It was a player");
             }
             Player player = (Player) event.getEntity();
-            player.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 5, 3));
             if (onTurrets.contains(player)) {
                 if (Debug == true) {
                     logger.info("on a turret");
                 }
                 demount(player, player.getLocation());
             }
-            if (player.isGliding())
-            {
+            if (player.isGliding()) {
                 player.setGliding(false);
                 player.setSprinting(false);
             }
