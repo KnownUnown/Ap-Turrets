@@ -381,6 +381,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                 if (Debug) {
                     logger.info("A bullet has landed");
                 }
+
                 Location arrowLoc = arrow.getLocation();
                 World world = event.getEntity().getWorld();
                 Location l = arrowLoc.getBlock().getLocation();
@@ -407,9 +408,12 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                 }
                 demount(player, player.getLocation());
             }
-            if (player.isGliding()) {
-                player.setGliding(false);
-                player.setSprinting(false);
+
+            if (event.getEntity().hasMetadata("isTurretBullet")) {
+                if (player.isGliding()) {
+                    player.setGliding(false);
+                    player.setSprinting(false);
+                }
             }
         }
     }
