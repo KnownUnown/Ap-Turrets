@@ -3,10 +3,13 @@ package com.snowleopard1863.APTurrets;
 import net.milkbowl.vault.economy.Economy;
 import net.minecraft.server.v1_10_R1.PacketPlayOutEntityDestroy;
 import org.bukkit.*;
-import org.bukkit.block.Sign;
+import org.bukkit.block.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.craftbukkit.v1_10_R1.entity.CraftPlayer;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Boat;
+import org.bukkit.entity.Horse;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -35,9 +38,9 @@ import java.util.logging.Logger;
 public final class TurretsMain extends JavaPlugin implements Listener {
     private PluginDescriptionFile pdfile = getDescription();
     private Logger logger = Logger.getLogger("Minecraft");
-    private List<Player> onTurrets = new ArrayList<Player>();
-    private List<Player> reloading = new ArrayList<Player>();
-    private List<Arrow> tracedArrows = new ArrayList<Arrow>();
+    private List<Player> onTurrets = new ArrayList<>();
+    private List<Player> reloading = new ArrayList<>();
+    private List<Arrow> tracedArrows = new ArrayList<>();
     private Boolean Debug = false;
     private FileConfiguration config = getConfig();
     private boolean takeFromInventory, takeFromChest, requireAmmo;
@@ -135,75 +138,55 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         logger.info(pdfile.getName() + " v" + pdfile.getVersion() + " has been disabled.");
     }
 
-    //
-    //
-    // Handles Players Mounting
-    //
-    //
+
+
     @EventHandler
     public void onClick(PlayerInteractEvent event) {
         if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            if (Debug == true) {
+            if (Debug) {
                 logger.info(event.getPlayer() + " has right clicked");
             }
             Player player = event.getPlayer();
             if (onTurrets.contains(player) && player.hasPermission("ap-turrets.use")) {
-                if (Debug == true) {
+                if (Debug) {
                     logger.info(event.getPlayer() + " is on a turret");
                 }
                 //Prevents Players From Drinking Milk Buckets to Clear Potion Effects
                 if (player.getInventory().getItemInMainHand().getType() == Material.MILK_BUCKET || player.getInventory().getItemInOffHand().getType() == Material.MILK_BUCKET) {
-                    if (Debug == true) {
+                    if (Debug) {
                         logger.info(event.getPlayer() + " has right clicked a milk bucket!");
                     }
                     event.setCancelled(true);
                 }
-                //
-                // Fires Turret If Player Is Holding Button and Has Ammo and Is Not Reloading
-                //
-
+                //Fires Turret If Player Is Not Reloading.
                 if ((player.getInventory().getItemInMainHand().getType() == Material.STONE_BUTTON
                         || player.getInventory().getItemInOffHand().getType() == Material.STONE_BUTTON)) {
 
-                    if (reloading.contains(player)) {
+                    if (reloading.contains(player))
                         return;
-                    } else if (player.getInventory().contains(Material.ARROW) && requireAmmo) {
-                        fireTurret(player);
-                        event.setCancelled(true);
-                        if (Debug == true) {
-                            logger.info(event.getPlayer() + " has shot");
-                        }
-                    } else if (player.getInventory().contains(Material.ARROW) != true) {
-                        reloading.add(player);
-                        Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-                            public void run() {
-                                reloading.remove(player);
-                            }
-                        }, (int) (delayBetweenShots * 10));
-                        World world = player.getWorld();
-                        world.playSound(player.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 1, 2);
-                        event.setCancelled(true);
-                        if (Debug == true) {
-                            logger.info(event.getPlayer() + " is out of ammo");
-                        }
+
+                    fireTurret(player);
+                    event.setCancelled(true);
+                    if (Debug) {
+                        logger.info(event.getPlayer() + " has started to shoot");
                     }
                 }
             }
         }
 
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            if (Debug == true) {
+            if (Debug) {
                 logger.info("A block has been right clicked");
             }
             if (event.getClickedBlock().getType() == Material.SIGN_POST
                     || event.getClickedBlock().getType() == Material.WALL_SIGN
                     || event.getClickedBlock().getType() == Material.SIGN) {
-                if (Debug == true) {
+                if (Debug) {
                     logger.info("A sign was clicked");
                 }
                 Sign sign = (Sign) event.getClickedBlock().getState();
                 if ("Mounted".equalsIgnoreCase(sign.getLine(0)) && "Gun".equalsIgnoreCase(sign.getLine(1))) {
-                    if (Debug == true) {
+                    if (Debug) {
                         logger.info("A Mounted Gun sign has been clicked");
                     }
                     Location signPos = event.getClickedBlock().getLocation();
@@ -215,18 +198,18 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         }
 
         if (event.getAction() == Action.LEFT_CLICK_BLOCK && event.getPlayer().getInventory().getItemInMainHand().getType() == Material.STONE_BUTTON) {
-            if (Debug == true) {
+            if (Debug) {
                 logger.info("A block has been left clicked while holding a button");
             }
             if (event.getClickedBlock().getType() == Material.SIGN_POST
                     || event.getClickedBlock().getType() == Material.WALL_SIGN
                     || event.getClickedBlock().getType() == Material.SIGN) {
-                if (Debug == true) {
+                if (Debug) {
                     logger.info("A sign was left clicked");
                 }
                 Sign sign = (Sign) event.getClickedBlock().getState();
                 if ("Mounted".equalsIgnoreCase(sign.getLine(0)) && "Gun".equalsIgnoreCase(sign.getLine(1))) {
-                    if (Debug == true) {
+                    if (Debug) {
                         logger.info("A Mounted Gun sign has been left clicked");
                     }
                     event.setCancelled(true);
@@ -282,11 +265,11 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                         sendMessage(player, "Turret Created!");
                         event.setLine(0, "Mounted");
                         event.setLine(1, "Gun");
-                        if (Debug == true) {
+                        if (Debug) {
                             logger.info("A Mounted Gun sign has been place");
                         }
                     } else {
-                        if (Debug == true) {
+                        if (Debug) {
                             logger.info("A Mounted Gun sign failed to place");
                         }
                         //if false, clear the sign and return a permision error
@@ -295,12 +278,12 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                     }
                 } else {
                     sendMessage(player, "Turret Created!");
-                    if (Debug == true) {
+                    if (Debug) {
                         logger.info("A Mounted Gun sign has been placed for free due to no vault instalation");
                     }
                 }
             } else {
-                if (Debug == true) {
+                if (Debug) {
                     logger.info("A Mounted Gun sign failed to place");
                 }
                 //if false, clear the sign and return a permision error
@@ -322,6 +305,13 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                 reloading.remove(player);
             }
         }, (int) (delayBetweenShots * 10));
+        boolean hasAmmoBeenTaken;
+        hasAmmoBeenTaken = !requireAmmo || takeAmmo(player);
+        if (!hasAmmoBeenTaken) {
+            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 1, 2);
+            if (Debug) logger.info(player + " is out of ammo");
+            return;
+        }
         Arrow arrow = player.launchProjectile(Arrow.class);
         arrow.setShooter(player);
         arrow.setVelocity(player.getLocation().getDirection().multiply(arrowVelocity));
@@ -346,27 +336,19 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         World world = player.getWorld();
         world.playSound(player.getLocation(), Sound.ENTITY_FIREWORK_BLAST, 1, 2);
         world.playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
-        if (requireAmmo && takeFromInventory) {
-            ItemStack stack = player.getInventory().getItem(player.getInventory().first(Material.ARROW)).clone();
-            stack.setAmount(1);
-            player.getInventory().removeItem(stack);
-            player.updateInventory();
-        }
 
-        if (Debug) {
-            logger.info("Mounted Gun Fired.");
-        }
+        if (Debug) logger.info("Mounted Gun Fired.");
     }
 
     @EventHandler
     public void onPlayerToggleSneakEvent(PlayerToggleSneakEvent event) {
         Player player = event.getPlayer();
-        if (Debug == true) {
+        if (Debug) {
             logger.info(player + " sneaked");
         }
         if (player.isSneaking() && onTurrets.contains(player)) {
             demount(player, player.getLocation());
-            if (Debug == true) {
+            if (Debug) {
                 logger.info(player + " got out of their turret");
             }
         }
@@ -393,17 +375,17 @@ public final class TurretsMain extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onEntityDamageEvent(EntityDamageEvent event) {
-        if (Debug == true) {
+        if (Debug) {
             logger.info("An entity was damaged");
         }
 
         if (event.getEntity() instanceof Player) {
-            if (Debug == true) {
+            if (Debug) {
                 logger.info("It was a player");
             }
             Player player = (Player) event.getEntity();
             if (onTurrets.contains(player)) {
-                if (Debug == true) {
+                if (Debug) {
                     logger.info("on a turret");
                 }
                 demount(player, player.getLocation());
@@ -425,7 +407,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
             //if (event.getDamager().getCustomName() == "Bullet") {
             if (event.getDamager().hasMetadata("isTurretBullet")) {
                 event.setDamage(damage);
-                if (Debug == true) {
+                if (Debug) {
                     Arrow a = (Arrow) event.getDamager();
                     Player shooter = (Player) a.getShooter();
                     logger.info(event.getEntity() + " was shot by " + shooter.getName() + " for " + event.getDamage() + " It should be doing " + damage);
@@ -437,17 +419,17 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     public void mount(Player player, Location signPos) {
         if (signPos.getBlock().getType() == Material.SIGN || signPos.getBlock().getType() == Material.SIGN_POST
                 || signPos.getBlock().getType() == Material.WALL_SIGN) {
-            if (Debug == true) {
+            if (Debug) {
                 logger.info("Sign detected");
             }
             Sign sign = (Sign) signPos.getBlock().getState();
             if (onTurrets.contains(player)) {
                 sendMessage(player, "You May Only Have One Person Mounted Per Turret.");
-                if (Debug == true) {
+                if (Debug) {
                     logger.info("1 player per turret");
                 }
             } else {
-                if (Debug == true) {
+                if (Debug) {
                     logger.info(player.getName() + " is now on a turret");
                 }
                 sign.setLine(2, player.getName());
@@ -466,14 +448,14 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     }
 
     public void demount(Player player, Location signPos) {
-        if (Debug == true) {
+        if (Debug) {
             logger.info(player.getName() + " is being taken off a turret");
         }
         onTurrets.remove(player);
         reloading.remove(player);
         if (signPos.getBlock().getType() == Material.SIGN || signPos.getBlock().getType() == Material.SIGN_POST
                 || signPos.getBlock().getType() == Material.WALL_SIGN) {
-            if (Debug == true) {
+            if (Debug) {
                 logger.info("sign found and updated");
             }
             Sign sign = (Sign) signPos.getBlock().getState();
@@ -484,7 +466,6 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         }
         signPos.subtract(-0.5, 0, -0.5);
         player.setWalkSpeed(0.2f);
-        //player.removePotionEffect(PotionEffectType.SLOW);
         player.removePotionEffect(PotionEffectType.JUMP);
     }
 
@@ -500,8 +481,76 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent e) {
         if (onTurrets.contains(e.getEntity().getKiller())) {
-            e.setDeathMessage(e.getEntity().getDisplayName() + " was gunned down by " + e.getEntity().getKiller().getDisplayName());
+            e.setDeathMessage(e.getEntity().getDisplayName() + " was gunned down by " + e.getEntity().getKiller().getDisplayName() + ".");
         }
     }
 
+    /**
+     * Takes Ammo From Player's Inventory For Firing The Turret.
+     * @param player Player Who Is Having Ammo Thier Ammo Taken
+     * @return Ammo Successfully Taken
+     */
+    public boolean takeAmmo(Player player) {
+        if (takeFromChest) {
+            Block signBlock = player.getLocation().getBlock();
+            if (signBlock.getType() == Material.WALL_SIGN || signBlock.getType() == Material.SIGN_POST) {
+                Sign s = (Sign) signBlock.getState();
+                if (s.getLine(0).equalsIgnoreCase("mounted") && s.getLine(1).equalsIgnoreCase("gun")) {
+                    Block adjacentBlock = getBlockSignAttachedTo(signBlock);
+                    if (adjacentBlock.getType() == Material.CHEST || adjacentBlock.getType() == Material.TRAPPED_CHEST) {
+                        Chest c = (Chest) adjacentBlock.getState();
+                        if (c.getBlockInventory().containsAtLeast(new ItemStack(Material.ARROW, 1), 1)) {
+                            c.getInventory().removeItem(new ItemStack(Material.ARROW, 1));
+                            c.update(true);
+                            return true;
+                        }
+                    }
+                    else if (adjacentBlock.getType() == Material.DISPENSER) {
+                        Dispenser d = (Dispenser) adjacentBlock.getState();
+                        if (d.getInventory().containsAtLeast(new ItemStack(Material.ARROW, 1), 1)) {
+                            d.getInventory().removeItem(new ItemStack(Material.ARROW, 1));
+                            d.update(true);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (takeFromInventory) {
+            if (player.getInventory().containsAtLeast(new ItemStack(Material.ARROW, 1), 1)) {
+                ItemStack stack = player.getInventory().getItem(player.getInventory().first(Material.ARROW)).clone();
+                stack.setAmount(1);
+                player.getInventory().removeItem(stack);
+                player.updateInventory();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks The Block That Is Being Used As A Support. Eg: Block Sign Is Placed Against
+     * @param block Block That You Are Checking For Support
+     * @return Block That Is Supporting
+     */
+    public static Block getBlockSignAttachedTo(Block block) {
+        if (block.getType().equals(Material.SIGN_POST))
+            return block.getRelative(BlockFace.DOWN);
+
+        if (block.getType().equals(Material.WALL_SIGN))
+            switch (block.getData()) {
+                case 2:
+                    return block.getRelative(BlockFace.SOUTH);
+                case 3:
+                    return block.getRelative(BlockFace.NORTH);
+                case 4:
+                    return block.getRelative(BlockFace.EAST);
+                case 5:
+                    return block.getRelative(BlockFace.WEST);
+            }
+        return null;
+    }
+
 }
+
