@@ -1,9 +1,13 @@
 package com.snowleopard1863.APTurrets;
-
+import net.countercraft.movecraft.craft.Craft;
+import net.countercraft.movecraft.craft.CraftManager;
+import net.countercraft.movecraft.utils.MovecraftLocation;
 import net.milkbowl.vault.economy.Economy;
 import net.minecraft.server.v1_10_R1.PacketPlayOutEntityDestroy;
 import org.bukkit.*;
-import org.bukkit.block.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.craftbukkit.v1_10_R1.entity.CraftPlayer;
 import org.bukkit.entity.Arrow;
@@ -22,6 +26,8 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
@@ -49,6 +55,8 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     private boolean useParticleTracers;
     private double delayBetweenShots;
     private static Economy economy;
+    private static CraftManager craftManager;
+    private static final Material[] INVENTORY_MATERIALS = new Material[]{Material.CHEST, Material.TRAPPED_CHEST, Material.FURNACE, Material.HOPPER, Material.DROPPER, Material.DISPENSER, Material.BREWING_STAND};
     private final ItemStack TURRETAMMO = new ItemStack(Material.ARROW, 1);
 
     @Override
@@ -104,6 +112,18 @@ public final class TurretsMain extends JavaPlugin implements Listener {
             economy = null;
         }
 
+        //
+        // Movecraft Support
+        //
+        if (getServer().getPluginManager().getPlugin("Movecraft") != null) {
+            craftManager = CraftManager.getInstance();
+            logger.info("Compatible Version Of Movecraft Found.");
+        } else {
+            logger.info("[WARNING] Could not find compatible Movecraft Version... Disabling");
+            craftManager = null;
+        }
+
+
         if (useParticleTracers) {
             getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                 public void run() {
@@ -138,7 +158,6 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         tracedArrows.clear();
         logger.info(pdfile.getName() + " v" + pdfile.getVersion() + " has been disabled.");
     }
-
 
 
     @EventHandler
@@ -488,16 +507,29 @@ public final class TurretsMain extends JavaPlugin implements Listener {
 
     /**
      * Takes Ammo From Player's Inventory For Firing The Turret.
+     *
      * @param player Player Who Is Having Ammo Thier Ammo Taken
      * @return Ammo Successfully Taken
      */
-public boolean takeAmmo(Player player) {
+    public boolean takeAmmo(Player player) {
         if (takeFromChest) {
             Block signBlock = player.getLocation().getBlock();
             if (signBlock.getType() == Material.WALL_SIGN || signBlock.getType() == Material.SIGN_POST) {
                 Sign s = (Sign) signBlock.getState();
+
+                if (craftManager != null)
+                {
+                    Craft c = craftManager.getCraftByPlayer(player);
+                    if (c != null) {
+                        Inventory i = firstInventory(c, TURRETAMMO, Material.CHEST, Material.TRAPPED_CHEST);
+                        if (i != null) {
+                            i.removeItem(TURRETAMMO);
+                            return true;
+                        }
+                    }
+                }
+
                 Block adjacentBlock = getBlockSignAttachedTo(signBlock);
-                
                 if (adjacentBlock.getState() instanceof InventoryHolder) {
                     InventoryHolder inventoryHolder = (InventoryHolder) adjacentBlock.getState();
                     if (inventoryHolder.getInventory().containsAtLeast(TURRETAMMO, 1)) {
@@ -520,6 +552,7 @@ public boolean takeAmmo(Player player) {
 
     /**
      * Checks The Block That Is Being Used As A Support. Eg: Block Sign Is Placed Against
+     *
      * @param block Block That You Are Checking For Support
      * @return Block That Is Supporting
      */
@@ -541,5 +574,76 @@ public boolean takeAmmo(Player player) {
         return null;
     }
 
-}
+    /**
+     * Converts a Movecraft Location Object to a Bukkit Location Object
+     *
+     * @param movecraftLoc Movecraft Location Object
+     * @param world        World The Craft Is In
+     * @return Location Object
+     */
+    public static Location movecraftLocationToBukkitLocation(MovecraftLocation movecraftLoc, World world) {
+        return new Location(world, movecraftLoc.getX(), movecraftLoc.getY(), movecraftLoc.getZ());
+    }
 
+    /**
+     * Converts a list of movecraftLocation Object to a bukkit Location Object
+     *
+     * @param movecraftLocations the movecraftLocations to be converted
+     * @param world              the world of the location
+     * @return the converted location
+     */
+    public static ArrayList<Location> movecraftLocationToBukkitLocation(List<MovecraftLocation> movecraftLocations, World world) {
+        ArrayList<Location> locations = new ArrayList<Location>();
+        for (MovecraftLocation movecraftLoc : movecraftLocations) {
+            locations.add(movecraftLocationToBukkitLocation(movecraftLoc, world));
+        }
+        return locations;
+    }
+
+    /**
+     * Converts a list of movecraftLocation Object to a bukkit Location Object
+     *
+     * @param movecraftLocations the movecraftLocations to be converted
+     * @param world              the world of the location
+     * @return the converted location
+     */
+    public static ArrayList<Location> movecraftLocationToBukkitLocation(MovecraftLocation[] movecraftLocations, World world) {
+        ArrayList<Location> locations = new ArrayList<Location>();
+        for (MovecraftLocation movecraftLoc : movecraftLocations) {
+            locations.add(movecraftLocationToBukkitLocation(movecraftLoc, world));
+        }
+        return locations;
+    }
+
+    public static MovecraftLocation bukkitLocationToMovecraftLocation(Location loc) {
+        return new MovecraftLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+    }
+
+    /**
+     * Gets the first inventory of a lookup material type on a craft holding a specific item, returns null if none found
+     * an input of null for item searches without checking inventory contents
+     * an input of an ItemStack with type set to Material.AIR for searches for empty space in an inventory
+     *
+     * @param craft the craft to scan
+     * @param item the item to look for during the scan
+     * @param lookup the materials to compare against while scanning
+     * @return the first inventory matching a lookup material on the craft
+     */
+    public static Inventory firstInventory(Craft craft, ItemStack item, Material... lookup){
+        if(craft == null)
+            throw new IllegalArgumentException("craft must not be null");
+
+        for(Location loc : movecraftLocationToBukkitLocation(craft.getBlockList(),craft.getW()))
+            for(Material m : lookup)
+                if(loc.getBlock().getType() == m)
+                {
+                    Inventory inv = ((InventoryHolder)loc.getBlock().getState()).getInventory();
+                    if(item==null)
+                        return inv;
+                    for(ItemStack i : inv)
+                        if((item.getType()==Material.AIR  && (i==null || i.getType()==Material.AIR)) || (i!=null && i.isSimilar(item)))
+                            return inv;
+                }
+        return null;
+    }
+}
