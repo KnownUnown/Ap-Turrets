@@ -49,6 +49,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     private boolean useParticleTracers;
     private double delayBetweenShots;
     private static Economy economy;
+    private ItemStack turretAmmo = new ItemStack(Material.ARROW, 1);
 
     @Override
     public void onEnable() {
@@ -490,38 +491,26 @@ public final class TurretsMain extends JavaPlugin implements Listener {
      * @param player Player Who Is Having Ammo Thier Ammo Taken
      * @return Ammo Successfully Taken
      */
-    public boolean takeAmmo(Player player) {
+        public boolean takeAmmo(Player player) {
         if (takeFromChest) {
             Block signBlock = player.getLocation().getBlock();
             if (signBlock.getType() == Material.WALL_SIGN || signBlock.getType() == Material.SIGN_POST) {
                 Sign s = (Sign) signBlock.getState();
-                if (s.getLine(0).equalsIgnoreCase("mounted") && s.getLine(1).equalsIgnoreCase("gun")) {
-                    Block adjacentBlock = getBlockSignAttachedTo(signBlock);
-                    if (adjacentBlock.getType() == Material.CHEST || adjacentBlock.getType() == Material.TRAPPED_CHEST) {
-                        Chest c = (Chest) adjacentBlock.getState();
-                        if (c.getBlockInventory().containsAtLeast(new ItemStack(Material.ARROW, 1), 1)) {
-                            c.getInventory().removeItem(new ItemStack(Material.ARROW, 1));
-                            c.update(true);
-                            return true;
-                        }
-                    }
-                    else if (adjacentBlock.getType() == Material.DISPENSER) {
-                        Dispenser d = (Dispenser) adjacentBlock.getState();
-                        if (d.getInventory().containsAtLeast(new ItemStack(Material.ARROW, 1), 1)) {
-                            d.getInventory().removeItem(new ItemStack(Material.ARROW, 1));
-                            d.update(true);
-                            return true;
-                        }
+                Block adjacentBlock = getBlockSignAttachedTo(signBlock);
+                
+                if (adjacentBlock instanceof InventoryHolder) {
+                    InventoryHolder inventoryHolder = (InventoryHolder) adjacentBlock.getState();
+                    if (inventoryHolder.getInventory().containsAtLeast(turretAmmo, 1)) {
+                        inventoryHolder.getInventory().removeItem(turretAmmo);
+                        return true;
                     }
                 }
             }
         }
 
         if (takeFromInventory) {
-            if (player.getInventory().containsAtLeast(new ItemStack(Material.ARROW, 1), 1)) {
-                ItemStack stack = player.getInventory().getItem(player.getInventory().first(Material.ARROW)).clone();
-                stack.setAmount(1);
-                player.getInventory().removeItem(stack);
+            if (player.getInventory().containsAtLeast(turretAmmo, 1)) {
+                player.getInventory().removeItem(turretAmmo);
                 player.updateInventory();
                 return true;
             }
