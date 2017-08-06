@@ -1,4 +1,6 @@
 package com.snowleopard1863.APTurrets;
+
+
 import net.countercraft.movecraft.craft.Craft;
 import net.countercraft.movecraft.craft.CraftManager;
 import net.countercraft.movecraft.utils.MovecraftLocation;
@@ -209,10 +211,14 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                     if (Debug) {
                         logger.info("A Mounted Gun sign has been clicked");
                     }
-                    Location signPos = event.getClickedBlock().getLocation();
-                    signPos.setPitch(event.getPlayer().getLocation().getPitch());
-                    signPos.setDirection(event.getPlayer().getVelocity());
-                    mount(event.getPlayer(), signPos);
+                    Block b = sign.getLocation().clone().subtract(0,1,0).getBlock();
+                    if (b.getType() != Material.SLIME_BLOCK)
+                    {
+                        Location signPos = event.getClickedBlock().getLocation();
+                        signPos.setPitch(event.getPlayer().getLocation().getPitch());
+                        signPos.setDirection(event.getPlayer().getVelocity());
+                        mount(event.getPlayer(), signPos);
+                    }
                 }
             }
         }
@@ -419,8 +425,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
             }
         }
     }
-
-
+    
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Arrow) {
@@ -647,3 +652,4 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         return null;
     }
 }
+
