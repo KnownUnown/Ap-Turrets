@@ -49,7 +49,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     private boolean useParticleTracers;
     private double delayBetweenShots;
     private static Economy economy;
-    private ItemStack turretAmmo = new ItemStack(Material.ARROW, 1);
+    private final ItemStack TURRETAMMO = new ItemStack(Material.ARROW, 1);
 
     @Override
     public void onEnable() {
@@ -491,17 +491,17 @@ public final class TurretsMain extends JavaPlugin implements Listener {
      * @param player Player Who Is Having Ammo Thier Ammo Taken
      * @return Ammo Successfully Taken
      */
-        public boolean takeAmmo(Player player) {
+public boolean takeAmmo(Player player) {
         if (takeFromChest) {
             Block signBlock = player.getLocation().getBlock();
             if (signBlock.getType() == Material.WALL_SIGN || signBlock.getType() == Material.SIGN_POST) {
                 Sign s = (Sign) signBlock.getState();
                 Block adjacentBlock = getBlockSignAttachedTo(signBlock);
                 
-                if (adjacentBlock instanceof InventoryHolder) {
+                if (adjacentBlock.getState() instanceof InventoryHolder) {
                     InventoryHolder inventoryHolder = (InventoryHolder) adjacentBlock.getState();
-                    if (inventoryHolder.getInventory().containsAtLeast(turretAmmo, 1)) {
-                        inventoryHolder.getInventory().removeItem(turretAmmo);
+                    if (inventoryHolder.getInventory().containsAtLeast(TURRETAMMO, 1)) {
+                        inventoryHolder.getInventory().removeItem(TURRETAMMO);
                         return true;
                     }
                 }
@@ -509,8 +509,8 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         }
 
         if (takeFromInventory) {
-            if (player.getInventory().containsAtLeast(turretAmmo, 1)) {
-                player.getInventory().removeItem(turretAmmo);
+            if (player.getInventory().containsAtLeast(TURRETAMMO, 1)) {
+                player.getInventory().removeItem(TURRETAMMO);
                 player.updateInventory();
                 return true;
             }
