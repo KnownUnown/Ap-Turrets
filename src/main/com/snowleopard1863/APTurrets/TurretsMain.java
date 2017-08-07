@@ -211,7 +211,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                     if (Debug) {
                         logger.info("A Mounted Gun sign has been clicked");
                     }
-                    Block b = sign.getLocation().clone().subtract(0,1,0).getBlock();
+                    Block b = sign.getLocation().subtract(0,1,0).getBlock();
                     if (b.getType() != Material.SLIME_BLOCK)
                     {
                         Location signPos = event.getClickedBlock().getLocation();
