@@ -278,14 +278,30 @@ public final class TurretsMain extends JavaPlugin implements Listener {
 
     @EventHandler
     public void eventSignChanged(SignChangeEvent event) {
-        //get player who placed the sign
+            //get player who placed the sign
         Player player = event.getPlayer();
+        Plugin wg = getServer().getPluginManager().getPlugin("WorldGuard");
+        Location location = player.getLocation();
+        RegionManager rm = WGBukkit.getRegionManager(player.getWorld());
+        boolean set = false;
+        
+        
+    	if (rm.getApplicableRegions(location).size() > 0) {
+    		set = true;
+    	}
+    	
+    	
+    	player.sendMessage("RM called, details:" + set);
+    	if (set == false) {
+    		player.sendMessage("You must be inside a airspace or region.");
+    	}
+    	
         //check if the sign matches the cases for a turret
         if ("Mounted".equalsIgnoreCase(event.getLine(0)) && "Gun".equalsIgnoreCase(event.getLine(1))) {
             //check if player has permission to place a turret, than check if they have enough money to place the sign
             if (player.hasPermission("ap-turrets.place")) {
                 if (economy != null) {
-                    if (economy.has(player, costToPlace)) {
+                    if (economy.has(player, costToPlace) && set == true) {
                         //if true charge player a configurable amount and send a message
                         economy.withdrawPlayer(player, 15000);
                         sendMessage(player, "Turret Created!");
