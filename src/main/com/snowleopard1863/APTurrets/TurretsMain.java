@@ -38,6 +38,13 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
+
+import com.sk89q.worldguard.bukkit.WGBukkit;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -276,21 +283,39 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         }
     }
 
+
+    
     @EventHandler
     public void eventSignChanged(SignChangeEvent event) {
         //get player who placed the sign
         Player player = event.getPlayer();
+        player.sendMessage("Sign Placed");
+        Plugin wg = getServer().getPluginManager().getPlugin("WorldGuard");
+        Location location = player.getLocation();
+        RegionManager rm = WGBukkit.getRegionManager(player.getWorld());
+        boolean set = false;
         //check if the sign matches the cases for a turret
         if ("Mounted".equalsIgnoreCase(event.getLine(0)) && "Gun".equalsIgnoreCase(event.getLine(1))) {
+        	if (rm.getApplicableRegions(location).size() <= 0) {
+        		   sendMessage(player,"You must be inside a airspace or region.");
+                   event.setCancelled(true);
+                   if (Debug) {
+                       logger.info("A Mounted Gun sign failed to place");
+                   }
+                   return;
+
+        	}
             //check if player has permission to place a turret, than check if they have enough money to place the sign
             if (player.hasPermission("ap-turrets.place")) {
                 if (economy != null) {
                     if (economy.has(player, costToPlace)) {
                         //if true charge player a configurable amount and send a message
+                    	if(set == true) {
                         economy.withdrawPlayer(player, 15000);
                         sendMessage(player, "Turret Created!");
                         event.setLine(0, "Mounted");
                         event.setLine(1, "Gun");
+                    	}
                         if (Debug) {
                             logger.info("A Mounted Gun sign has been place");
                         }
@@ -299,7 +324,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                             logger.info("A Mounted Gun sign failed to place");
                         }
                         //if false, clear the sign and return a permision error
-                        event.setCancelled(true);
+                       
                         sendMessage(player, "You Don't Have Enough Money To Place A Turret. Cost To Place: " + ChatColor.RED + costToPlace);
                     }
                 } else {
