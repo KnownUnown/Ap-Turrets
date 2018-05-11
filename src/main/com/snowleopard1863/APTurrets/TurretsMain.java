@@ -293,7 +293,6 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         Plugin wg = getServer().getPluginManager().getPlugin("WorldGuard");
         Location location = player.getLocation();
         RegionManager rm = WGBukkit.getRegionManager(player.getWorld());
-        boolean set = false;
         //check if the sign matches the cases for a turret
         if ("Mounted".equalsIgnoreCase(event.getLine(0)) && "Gun".equalsIgnoreCase(event.getLine(1))) {
         	if (rm.getApplicableRegions(location).size() <= 0) {
@@ -310,12 +309,10 @@ public final class TurretsMain extends JavaPlugin implements Listener {
                 if (economy != null) {
                     if (economy.has(player, costToPlace)) {
                         //if true charge player a configurable amount and send a message
-                    	if(set == true) {
                         economy.withdrawPlayer(player, 15000);
                         sendMessage(player, "Turret Created!");
                         event.setLine(0, "Mounted");
                         event.setLine(1, "Gun");
-                    	}
                         if (Debug) {
                             logger.info("A Mounted Gun sign has been place");
                         }
