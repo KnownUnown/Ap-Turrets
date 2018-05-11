@@ -289,7 +289,6 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     public void eventSignChanged(SignChangeEvent event) {
         //get player who placed the sign
         Player player = event.getPlayer();
-        player.sendMessage("Sign Placed");
         Plugin wg = getServer().getPluginManager().getPlugin("WorldGuard");
         Location location = player.getLocation();
         RegionManager rm = WGBukkit.getRegionManager(player.getWorld());
