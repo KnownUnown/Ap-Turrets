@@ -68,7 +68,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         //Basic Setup
-        Plugin p = this;
+        final Plugin p = this;
         logger.info(pdfile.getName() + " v" + pdfile.getVersion() + " has been enbaled.");
         getServer().getPluginManager().registerEvents(this, this);
         //
@@ -338,7 +338,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     }
 
 
-    public void fireTurret(Player player) {
+    public void fireTurret(final Player player) {
         if (player.isGliding()) {
             demount(player, player.getLocation());
             return;
