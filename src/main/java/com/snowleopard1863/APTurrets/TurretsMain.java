@@ -5,6 +5,8 @@ import net.countercraft.movecraft.craft.Craft;
 import net.countercraft.movecraft.craft.CraftManager;
 import net.countercraft.movecraft.utils.MovecraftLocation;
 import net.milkbowl.vault.economy.Economy;
+import net.minecraft.server.v1_10_R1.EntityPlayer;
+import net.minecraft.server.v1_10_R1.EntityTippedArrow;
 import net.minecraft.server.v1_10_R1.PacketPlayOutEntityDestroy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -12,10 +14,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.craftbukkit.v1_10_R1.entity.CraftPlayer;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Boat;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -356,7 +355,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
             if (Debug) logger.info(player + " is out of ammo");
             return;
         }
-        Arrow arrow = player.launchProjectile(Arrow.class);
+        Arrow arrow = launchArrow(player);
         arrow.setShooter(player);
         arrow.setVelocity(player.getLocation().getDirection().multiply(arrowVelocity));
         arrow.setBounce(false);
@@ -382,6 +381,17 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         world.playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
 
         if (Debug) logger.info("Mounted Gun Fired.");
+    }
+
+    private Arrow launchArrow(Player bukkitPlayer) {
+        EntityPlayer player = ((CraftPlayer) bukkitPlayer).getHandle();
+        net.minecraft.server.v1_10_R1.World world = player.getWorld();
+        EntityTippedArrow arrow = new EntityTippedArrow(world, player);
+
+        arrow.setNoGravity(true);
+        world.addEntity(arrow);
+
+        return (Arrow) arrow.getBukkitEntity();
     }
 
     @EventHandler
