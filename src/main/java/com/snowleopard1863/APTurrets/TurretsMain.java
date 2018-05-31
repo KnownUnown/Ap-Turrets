@@ -42,6 +42,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -57,7 +58,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
     private Boolean Debug = false;
     private FileConfiguration config = getConfig();
     private boolean takeFromInventory, takeFromChest, requireAmmo;
-    private double costToPlace, damage, incindiaryChance, arrowVelocity;
+    private double costToPlace, damage, incindiaryChance, arrowVelocity, arrowSkew;
     private int knockbackStrength;
     private boolean useParticleTracers;
     private double delayBetweenShots;
@@ -86,6 +87,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         config.addDefault("Arrow velocity", 4.0);
         config.addDefault("Particle tracers", true);
         config.addDefault("Delay between shots", 0.2);
+        config.addDefault("Skew", 0.02);
         config.options().copyDefaults(true);
         this.saveConfig();
         //
@@ -102,6 +104,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         arrowVelocity = getConfig().getDouble("Arrow velocity");
         useParticleTracers = getConfig().getBoolean("Particle tracers");
         delayBetweenShots = getConfig().getDouble("Delay between shots");
+        arrowSkew = getConfig().getDouble("Skew");
         //
         // Vault Support
         //
@@ -360,7 +363,7 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         }
         Arrow arrow = launchArrow(player);
         arrow.setShooter(player);
-        arrow.setVelocity(player.getLocation().getDirection().multiply(arrowVelocity));
+        arrow.setVelocity(skew(player.getLocation().getDirection()).multiply(arrowVelocity));
         arrow.setBounce(false);
         arrow.setMetadata("isTurretBullet", new FixedMetadataValue(this, true));
         arrow.setKnockbackStrength(knockbackStrength);
@@ -384,6 +387,14 @@ public final class TurretsMain extends JavaPlugin implements Listener {
         world.playEffect(player.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
 
         if (Debug) logger.info("Mounted Gun Fired.");
+    }
+
+    private double randomInSkewRange() {
+        return Math.random() * 2 * arrowSkew - arrowSkew; // (-arrowSkew, arrowSkew)
+    }
+
+    private Vector skew(Vector v) {
+        return v.add(new Vector(randomInSkewRange(), randomInSkewRange(), randomInSkewRange()));
     }
 
     private Arrow launchArrow(Player bukkitPlayer) {
