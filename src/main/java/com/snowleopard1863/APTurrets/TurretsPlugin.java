@@ -12,10 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Optional;
+import java.util.*;
 
 public class TurretsPlugin extends JavaPlugin implements IntegrationManager, TurretManager {
 	private static final String META_TURRET_OCCUPANT = "TurretUser";
@@ -27,6 +24,7 @@ public class TurretsPlugin extends JavaPlugin implements IntegrationManager, Tur
 	private HashMap<Player, Turret> turrets = new HashMap<>();
 
 	private Config config;
+	private I18n lang;
 	private EventListener listener;
 
 	@Override
@@ -38,6 +36,9 @@ public class TurretsPlugin extends JavaPlugin implements IntegrationManager, Tur
 			e.printStackTrace();
 			getPluginLoader().disablePlugin(this);
 		}
+		lang = I18n.getInstance();
+		lang.init(config);
+
 		enableIntegrations();
 
 		listener = new EventListener(this, this, config);
@@ -115,7 +116,7 @@ public class TurretsPlugin extends JavaPlugin implements IntegrationManager, Tur
 	}
 
 	private void enableIntegrations() {
-		StringBuilder str = new StringBuilder("Enabled integrations:");
+		ArrayList<String> names = new ArrayList<>();
 		Arrays.stream(new Integration[]{
 				// Taking arrows from craft chests
 				new MovecraftIntegration(),
@@ -136,10 +137,12 @@ public class TurretsPlugin extends JavaPlugin implements IntegrationManager, Tur
 				})
 				.peek(this::register)
 				.map(integration -> " " + integration.getClass().getSimpleName())
-				.forEach(str::append);
+				.forEach(names::add);
 
-		getLogger().info(str.toString());
+		getLogger().info(lang.sprintf("plugin.enabled_integrations",
+				String.join(",", names.toArray(new String[]{}))));
 	}
+
 	@Override
 	public void register(Integration integration) {
 		integrations.put(integration.getClass().getName(), integration);

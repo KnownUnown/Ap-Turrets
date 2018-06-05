@@ -21,6 +21,7 @@ public class EventListener implements Listener {
 	private IntegrationManager integrations;
 	private TurretManager turrets;
 	private Config config;
+	private I18n lang = I18n.getInstance();
 	
 	EventListener(IntegrationManager integrations, TurretManager turrets, Config config) {
 		this.integrations = integrations;
@@ -42,6 +43,12 @@ public class EventListener implements Listener {
 			}
 		} else { // player isn't currently on a turret
 			if(e.getAction() == Action.RIGHT_CLICK_BLOCK) { // attempt to mount turret
+				if(!player.hasPermission("ap-turrets.use")) {
+					lang.pprintf(e.getPlayer(), "use.insufficient_permissions");
+					e.setCancelled(true);
+					return;
+				}
+
 				Block block = e.getClickedBlock();
 				if(turrets.isTurret(block) && !turrets.isTurretOccupied(block)) {
 					turrets.mountTurret(player, block);
@@ -53,6 +60,7 @@ public class EventListener implements Listener {
 	@EventHandler
 	public void onSignChange(SignChangeEvent e) {
 		if(!e.getPlayer().hasPermission("ap-turrets.place")) {
+			lang.pprintf(e.getPlayer(), "place.insufficient_permissions");
 			e.setCancelled(true);
 			return;
 		}
@@ -62,7 +70,8 @@ public class EventListener implements Listener {
 				Optional<WorldGuardIntegration> wg = integrations.getIntegration(WorldGuardIntegration.class);
 				wg.ifPresent(integration -> {
 					if(!integration.isInARegion(e.getPlayer())) {
-						e.setCancelled(true); // TODO: knownunown: deny message
+						lang.pprintf(e.getPlayer(), "place.no_region");
+						e.setCancelled(true);
 					}
 				});
 			}
@@ -70,7 +79,8 @@ public class EventListener implements Listener {
 				Optional<VaultIntegration> vault = integrations.getIntegration(VaultIntegration.class);
 				vault.ifPresent(integration -> {
 					if(!integration.withdrawFunds(e.getPlayer(), config.costToPlace)) {
-						e.setCancelled(true); // TODO: knownunown: insufficient funds message
+						lang.pprintf(e.getPlayer(), "place.insufficient_funds");
+						e.setCancelled(true);
 					}
 				});
 			}

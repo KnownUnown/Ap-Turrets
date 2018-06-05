@@ -5,6 +5,7 @@ import de.exlll.configlib.Configuration;
 import de.exlll.configlib.Version;
 
 import java.nio.file.Path;
+import java.util.Locale;
 
 @SuppressWarnings("unused")
 @Version(version = "1.0.0")
@@ -53,6 +54,18 @@ public class Config extends Configuration {
 		public boolean inventory = true;
 		public boolean chest = true;
 		public boolean craft = true;
+	}
+
+	@Comment("Language for plugin messages.")
+	public Locale locale = new Locale();
+
+	public class Locale {
+		public String language = "en";
+		public String region = "US";
+
+		public java.util.Locale toJavaLocale() {
+			return new java.util.Locale(language, region);
+		}
 	}
 
 	public Config(Path path) {
