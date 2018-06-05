@@ -73,7 +73,7 @@ public class Turret {
 			if(integration.isPresent()) {
 				Optional<Inventory> inv = integration.get().inventoryContainingItemForPlayerOnCraft(player, ammunition);
 				if(inv.isPresent()) {
-					inv.get().remove(ammunition);
+					inv.get().removeItem(ammunition);
 					return true;
 				}
 			}

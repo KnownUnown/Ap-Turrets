@@ -36,7 +36,7 @@ public class MovecraftIntegration implements Integration {
 				.filter(block ->
 						block.getType() == Material.CHEST ||
 						block.getType() == Material.TRAPPED_CHEST)
-				.map(block -> ((InventoryHolder) block))
+				.map(block -> ((InventoryHolder) block.getState()))
 				.filter(inventoryHolder -> inventoryHolder.getInventory().containsAtLeast(stack, 1))
 				.map(InventoryHolder::getInventory)
 				.findFirst();
