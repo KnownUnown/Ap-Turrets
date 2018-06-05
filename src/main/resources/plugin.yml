@@ -1,6 +1,19 @@
-main: com.snowleopard1863.APTurrets.TurretsMain
-version: 2.2.0
+main: com.snowleopard1863.APTurrets.TurretsPlugin
+version: ${project.version}
 name: APTurrets
 
 depend: [Movecraft, WorldGuard]
 softdepend: [Vault]
+
+permissions:
+  ap-turrets.*:
+    description: Grants access to all turret functionality
+    children:
+      ap-turrets.use: true
+      ap-turrets.place: true
+  ap-turrets.use:
+    description: Allows players to mount and shoot turrets
+    default: true
+  ap-turrets.place:
+    description: Allows players to place turrets
+    default: true
