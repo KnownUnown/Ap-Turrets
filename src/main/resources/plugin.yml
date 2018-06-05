@@ -2,8 +2,7 @@ main: com.snowleopard1863.APTurrets.TurretsPlugin
 version: ${project.version}
 name: APTurrets
 
-depend: [Movecraft, WorldGuard]
-softdepend: [Vault]
+softdepend: [Vault, Movecraft, WorldGuard]
 
 permissions:
   ap-turrets.*:
