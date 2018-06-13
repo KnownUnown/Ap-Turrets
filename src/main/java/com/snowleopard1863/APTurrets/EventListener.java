@@ -3,6 +3,9 @@ package com.snowleopard1863.APTurrets;
 import com.snowleopard1863.APTurrets.integration.IntegrationManager;
 import com.snowleopard1863.APTurrets.integration.VaultIntegration;
 import com.snowleopard1863.APTurrets.integration.WorldGuardIntegration;
+import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
@@ -13,7 +16,9 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.material.MaterialData;
 
 import java.util.Optional;
 
@@ -36,7 +41,22 @@ public class EventListener implements Listener {
 			if(e.hasItem()) {
 				switch(e.getItem().getType()) {
 					case STONE_BUTTON: // Shoot turret
-						turrets.getTurret(player).ifPresent(Turret::shoot); // will it ever not be present?
+						turrets.getTurret(player).ifPresent(turret -> {
+							switch(turret.shoot()) {
+								case FAIL_COOLDOWN:
+									break;
+								case FAIL_NO_AMMO:
+									player.getWorld().playSound(player.getLocation(),
+											Sound.BLOCK_DISPENSER_FAIL, 1, 2);
+									break;
+								case SUCCESS:
+									player.getWorld().playSound(player.getLocation(),
+											Sound.ENTITY_FIREWORK_BLAST, 1, 2);
+									player.getWorld().playEffect(player.getLocation(),
+											Effect.MOBSPAWNER_FLAMES, 0);
+									break;
+							}
+						});
 						e.setCancelled(true);
 						break;
 				}
@@ -98,6 +118,16 @@ public class EventListener implements Listener {
 	public void onPickupArrow(PlayerPickupArrowEvent e) {
 		if(e.getArrow().getCustomName().equals("TurretRound"))
 			e.setCancelled(true);
+	}
+
+	@EventHandler
+	public void onArrowHit(ProjectileHitEvent e) {
+		Arrow arrow = (Arrow) e.getEntity();
+		Location loc = arrow.getLocation();
+		Block blk = loc.subtract(0, 1, 0).getBlock();
+
+		arrow.getWorld().playEffect(loc, Effect.STEP_SOUND, blk.getType());
+		arrow.getWorld().playEffect(loc, Effect.TILE_BREAK, new MaterialData(blk.getType()), 0);
 	}
 
 	@EventHandler

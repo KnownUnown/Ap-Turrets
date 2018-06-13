@@ -5,7 +5,6 @@ import de.exlll.configlib.Configuration;
 import de.exlll.configlib.Version;
 
 import java.nio.file.Path;
-import java.util.Locale;
 
 @SuppressWarnings("unused")
 @Version(version = "1.0.0")
@@ -28,6 +27,9 @@ public class Config extends Configuration {
 
 	@Comment("Velocity multiplier for rounds.")
 	public double velocity = 4.0;
+
+	@Comment("Minimum round velocity: rounds below this velocity will be despawned.")
+	public double disintegrateVelocity = 2.0;
 
 	@Comment("Hide arrows.")
 	public boolean tracers = true;

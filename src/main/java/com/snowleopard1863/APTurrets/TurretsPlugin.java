@@ -1,14 +1,19 @@
 package com.snowleopard1863.APTurrets;
 
 import com.snowleopard1863.APTurrets.integration.*;
+import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +30,6 @@ public class TurretsPlugin extends JavaPlugin implements IntegrationManager, Tur
 
 	private Config config;
 	private I18n lang;
-	private EventListener listener;
 
 	@Override
 	public void onEnable() {
@@ -41,7 +45,7 @@ public class TurretsPlugin extends JavaPlugin implements IntegrationManager, Tur
 
 		enableIntegrations();
 
-		listener = new EventListener(this, this, config);
+		EventListener listener = new EventListener(this, this, config);
 		getServer().getPluginManager().registerEvents(listener, this);
 
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
@@ -49,14 +53,23 @@ public class TurretsPlugin extends JavaPlugin implements IntegrationManager, Tur
 				for(Iterator<Arrow> i = turret.shotArrows.iterator(); i.hasNext(); ) {
 					Arrow arrow = i.next();
 
-					if (!arrow.getCustomName().equals("TurretRound")) return;
+					if (!arrow.getCustomName().equals("TurretRound")) continue;
+
 					if (!arrow.isOnGround()) {
-						player.getWorld().spawnParticle(Particle.CRIT, arrow.getLocation(), 3);
-						return;
+						if(isAreaLoaded(arrow.getLocation())) {
+							player.getWorld().spawnParticle(Particle.CRIT,
+									arrow.getLocation(), 3, 0.0, 0.0, 0.0, 0);
+
+							if(arrow.getVelocity().distance(new Vector()) > config.disintegrateVelocity) {
+								continue;
+							}
+						}
 					}
 
+					// default condition
 					arrow.remove();
 					i.remove();
+
 				}
 			}))
 		, 0, config.traceInterval);
@@ -70,7 +83,7 @@ public class TurretsPlugin extends JavaPlugin implements IntegrationManager, Tur
 		block.setMetadata(META_TURRET_OCCUPANT,
 				new FixedMetadataValue(this, player.getUniqueId()));
 		turrets.put(player, new Turret(this, config, player));
-		player.teleport(block.getLocation());
+		player.teleport(block.getLocation().add(0.5, 0, 0.5));
 		player.setWalkSpeed(0);
 	}
 
@@ -106,6 +119,21 @@ public class TurretsPlugin extends JavaPlugin implements IntegrationManager, Tur
 		return block.hasMetadata(META_TURRET_OCCUPANT);
 	}
 
+	private boolean isAreaLoaded(Location location) {
+		World world = location.getWorld();
+		int chunkX = location.getBlockX() >> 4;
+		int chunkZ = location.getBlockZ() >> 4;
+
+		final int offsets[][] = {{0, 0}, {0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+		for(int[] offset : offsets) {
+			if(!world.isChunkLoaded(chunkX + offset[0], chunkZ + offset[1])) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	@Override
 	public void onDisable() {
 		for(Iterator<Player> i = turrets.keySet().iterator(); i.hasNext(); ) {
@@ -113,6 +141,14 @@ public class TurretsPlugin extends JavaPlugin implements IntegrationManager, Tur
 			dismountTurret(p, false);
 			i.remove();
 		}
+
+		getServer().getWorlds().stream()
+				.map(World::getEntities)
+				.forEach(entities -> entities.stream()
+						.filter(entity ->
+								entity.getType().equals(EntityType.ARROW) &&
+								entity.getCustomName().equals("TurretRound"))
+						.forEach(Entity::remove)); // don't leak turret rounds
 	}
 
 	private void enableIntegrations() {
